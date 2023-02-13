@@ -8,7 +8,7 @@ const NotFound = require('../errors/NotFound');
 const { NODE_ENV, JWT_SECRET = 'my-personal-key' } = process.env;
 
 const getUser = (req, res, next) => {
-  const { userId } = req.params;
+  const userId = req.user._id;
   User.findById(userId)
     .orFail(new NotFound('Не верно указан id пользователя'))
     .then((user) => {
@@ -45,13 +45,15 @@ const updateUser = (req, res, next) => {
 
 const createUser = (req, res, next) => {
   const {
+    name,
+    email,
     password,
   } = req.body;
 
   bcrypt.hash(password, 10)
     .then((hash) => {
       User.create({
-        ...req.body, password: hash,
+        name, email, password: hash,
       })
         .then((user) => {
           res.send({
