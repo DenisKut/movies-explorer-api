@@ -3,7 +3,7 @@ const { LINK_REGULAR_EXPRESSION } = require('../utils/utils');
 
 const validateCreateUser = celebrate({
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
+    name: Joi.string().required().min(2).max(30),
     email: Joi.string().required().email(),
     password: Joi.string().required(),
   }),
@@ -41,7 +41,7 @@ const validateCreateMovie = celebrate({
 
 const validateMovieById = celebrate({
   params: Joi.object().keys({
-    cardId: Joi.string().required().hex().length(24),
+    movieId: Joi.string().required().hex().length(24),
   }),
 });
 

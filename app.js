@@ -1,24 +1,18 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 const { errors } = require('celebrate');
+const { requestLimiter, devDataBase } = require('./utils/config');
 
 const { requestLogger, errorLogger } = require('./middlewares/logger');
-const router = require('./routes/routes');
+const router = require('./routes/index');
 const { errorHandler } = require('./errors/standartError');
 
 // Слушаем 3000 порт
-const { PORT = 3000, DATA_BASE = 'mongodb://127.0.0.1:27017/moviesdb' } = process.env;
-
-const requestLimiter = rateLimit({
-  windowMs: 1000 * 60,
-  max: 1000,
-  message: 'Слишком много запросов подряд!',
-});
+const { PORT = 3000, NODE_ENV, DATA_BASE } = process.env;
 
 const app = express();
 
@@ -35,8 +29,6 @@ app.use(cors());
 
 mongoose.set('strictQuery', true);
 
-app.use(requestLimiter);
-
 app.use(requestLogger);
 // краш-тест сервера
 app.get('/crash-test', () => {
@@ -51,7 +43,9 @@ app.use(errorLogger);
 app.use(errors());
 app.use(errorHandler);
 
-mongoose.connect(DATA_BASE, {
+app.use(requestLimiter);
+
+mongoose.connect(NODE_ENV === 'production' ? DATA_BASE : devDataBase, {
   useNewUrlParser: true,
 });
 

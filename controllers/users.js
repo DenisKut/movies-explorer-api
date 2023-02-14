@@ -4,19 +4,26 @@ const User = require('../models/user');
 const BadRequest = require('../errors/BadRequest');
 const Conflict = require('../errors/Conflict');
 const NotFound = require('../errors/NotFound');
+const {
+  WRONG_USER_ID,
+  WRONG_DATA,
+  EMAIL_UPDATE_DUBLICATE,
+  REGISTER_DUBLICATE,
+
+} = require('../utils/constants');
 
 const { NODE_ENV, JWT_SECRET = 'my-personal-key' } = process.env;
 
 const getUser = (req, res, next) => {
   const userId = req.user._id;
   User.findById(userId)
-    .orFail(new NotFound('Не верно указан id пользователя'))
+    .orFail(new NotFound(WRONG_USER_ID))
     .then((user) => {
       res.status(200).send({ name: user.name, email: user.email });
     })
     .catch((error) => {
       if (error.name === 'CastError') {
-        next(new BadRequest('Проверьте корректность введённых данных'));
+        next(new BadRequest(WRONG_DATA));
       } else {
         next(error);
       }
@@ -30,13 +37,15 @@ const updateUser = (req, res, next) => {
     { name, email },
     { new: true, runValidators: true },
   )
-    .orFail(new NotFound('Указан несуществующий id пользователя'))
+    .orFail(new NotFound(WRONG_USER_ID))
     .then((user) => {
       res.status(200).send(user);
     })
     .catch((error) => {
       if (error.name === 'ValidationError') {
-        next(new BadRequest('Проверьте корректность введённых данных'));
+        next(new BadRequest(WRONG_DATA));
+      } else if (error.code === 11000) {
+        next(new Conflict(EMAIL_UPDATE_DUBLICATE));
       } else {
         next(error);
       }
@@ -54,24 +63,24 @@ const createUser = (req, res, next) => {
     .then((hash) => {
       User.create({
         name, email, password: hash,
-      })
-        .then((user) => {
-          res.send({
-            userData: {
-              name: user.name,
-              email: user.email,
-            },
-          });
-        })
-        .catch((error) => {
-          if (error.name === 'ValidationError') {
-            next(new BadRequest('Проверьте корректность введённых данных'));
-          } else if (error.code === 11000) {
-            next(new Conflict('Пользователь с такой почтой уже зарегестрирован'));
-          } else {
-            next(error);
-          }
-        });
+      });
+    })
+    .then((user) => {
+      res.send({
+        userData: {
+          name: user.name,
+          email: user.email,
+        },
+      });
+    })
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        next(new BadRequest(WRONG_DATA));
+      } else if (error.code === 11000) {
+        next(new Conflict(REGISTER_DUBLICATE));
+      } else {
+        next(error);
+      }
     });
 };
 

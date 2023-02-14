@@ -9,6 +9,7 @@ router.use('/', auth);
 router.use('/users', authorization, users);
 router.use('/movies', authorization, movies);
 
+router.use(authorization);
 router.use('*', (req, res, next) => {
   next(new NotFound('Page Not Found!'));
 });

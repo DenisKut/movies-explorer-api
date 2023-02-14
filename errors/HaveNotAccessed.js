@@ -1,7 +1,9 @@
+const { ERROR_CODE_ACCESS_CLOSED } = require('../utils/constants');
+
 class HaveNotAccessed extends Error {
   constructor(message) {
     super(message);
-    this.statusCode = 403;
+    this.statusCode = ERROR_CODE_ACCESS_CLOSED;
   }
 }
 

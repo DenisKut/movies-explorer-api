@@ -2,49 +2,28 @@ const Movie = require('../models/movie');
 const BadRequest = require('../errors/BadRequest');
 const HaveNotAccessed = require('../errors/HaveNotAccessed');
 const NotFound = require('../errors/NotFound');
+const {
+  WRONG_MOVIE_DATA,
+  WRONG_MOVIE_SELECT,
+  ACCESS_CLOSED,
+  WRONG_DATA,
+} = require('../utils/constants');
 
 const getMovies = (req, res, next) => {
-  Movie.find({})
+  const userId = req.user._id;
+  Movie.find({ owner: userId })
     .then((movies) => res
       .send(movies))
     .catch(next);
 };
 
 const createMovie = (req, res, next) => {
-  const {
-    country,
-    director,
-    duration,
-    year,
-    description,
-    image,
-    trailerLink,
-    thumbnail,
-    movieId,
-    nameRU,
-    nameEN,
-  } = req.body;
-  const owner = req.user._id;
-
-  Movie.create({
-    country,
-    director,
-    duration,
-    year,
-    description,
-    image,
-    trailerLink,
-    thumbnail,
-    owner,
-    movieId,
-    nameRU,
-    nameEN,
-  })
+  Movie.create({ ...req.body, owner: req.user._id })
     .then((movie) => res
       .send(movie))
     .catch((error) => {
       if (error.name === 'ValidationError') {
-        next(new BadRequest('Проверьте корректность введённых данных фильма'));
+        next(new BadRequest(WRONG_MOVIE_DATA));
       } else {
         next(error);
       }
@@ -55,10 +34,10 @@ const deleteMovie = (req, res, next) => {
   const userId = req.user._id;
   const { movieId } = req.params;
   Movie.findById(movieId)
-    .orFail(new NotFound('Данного фильма не существует'))
+    .orFail(new NotFound(WRONG_MOVIE_SELECT))
     .then((movie) => {
       if (!movie.owner.equals(userId)) {
-        next(new HaveNotAccessed('Попытка удаления чужого фильма'));
+        next(new HaveNotAccessed(ACCESS_CLOSED));
       } else {
         Movie.findByIdAndRemove(movieId)
           .then(() => res.send(movie))
@@ -67,7 +46,7 @@ const deleteMovie = (req, res, next) => {
     })
     .catch((error) => {
       if (error.name === 'CastError') {
-        next(new BadRequest('Проверьте корректность введённых данных'));
+        next(new BadRequest(WRONG_DATA));
       } else {
         next(error);
       }
