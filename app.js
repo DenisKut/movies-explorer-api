@@ -6,9 +6,10 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 const { errors } = require('celebrate');
 const { requestLimiter, devDataBase } = require('./utils/config');
+const { CRASH_TEST_ERROR } = require('./utils/constants');
 
 const { requestLogger, errorLogger } = require('./middlewares/logger');
-const router = require('./routes/index');
+const router = require('./routes');
 const { errorHandler } = require('./errors/standartError');
 
 // Слушаем 3000 порт
@@ -33,17 +34,17 @@ app.use(requestLogger);
 // краш-тест сервера
 app.get('/crash-test', () => {
   setTimeout(() => {
-    throw new Error('Сервер сейчас упадёт');
+    throw new Error(CRASH_TEST_ERROR);
   }, 0);
 });
+
+app.use(requestLimiter);
 
 app.use(router);
 app.use(errorLogger);
 
 app.use(errors());
 app.use(errorHandler);
-
-app.use(requestLimiter);
 
 mongoose.connect(NODE_ENV === 'production' ? DATA_BASE : devDataBase, {
   useNewUrlParser: true,

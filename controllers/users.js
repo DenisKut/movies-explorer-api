@@ -63,25 +63,26 @@ const createUser = (req, res, next) => {
     .then((hash) => {
       User.create({
         name, email, password: hash,
-      });
+      })
+        .then((user) => {
+          res.send({
+            userData: {
+              name: user.name,
+              email: user.email,
+            },
+          });
+        })
+        .catch((error) => {
+          if (error.name === 'ValidationError') {
+            next(new BadRequest(WRONG_DATA));
+          } else if (error.code === 11000) {
+            next(new Conflict(REGISTER_DUBLICATE));
+          } else {
+            next(error);
+          }
+        });
     })
-    .then((user) => {
-      res.send({
-        userData: {
-          name: user.name,
-          email: user.email,
-        },
-      });
-    })
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
-        next(new BadRequest(WRONG_DATA));
-      } else if (error.code === 11000) {
-        next(new Conflict(REGISTER_DUBLICATE));
-      } else {
-        next(error);
-      }
-    });
+    .catch((error) => next(error));
 };
 
 const login = (req, res, next) => {
