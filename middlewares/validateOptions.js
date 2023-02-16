@@ -33,7 +33,7 @@ const validateCreateMovie = celebrate({
     image: Joi.string().required().pattern(LINK_REGULAR_EXPRESSION),
     trailerLink: Joi.string().required().pattern(LINK_REGULAR_EXPRESSION),
     thumbnail: Joi.string().required().pattern(LINK_REGULAR_EXPRESSION),
-    movieId: Joi.string().required().hex().length(24),
+    movieId: Joi.number().required(),
     nameRU: Joi.string().required(),
     nameEN: Joi.string().required(),
   }),
@@ -41,7 +41,7 @@ const validateCreateMovie = celebrate({
 
 const validateMovieById = celebrate({
   params: Joi.object().keys({
-    movieId: Joi.string().required().hex().length(24),
+    movieId: Joi.string().required().length(24).hex(),
   }),
 });
 

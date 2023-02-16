@@ -38,7 +38,7 @@ const deleteMovie = (req, res, next) => {
       if (!movie.owner.equals(userId)) {
         next(new HaveNotAccessed(ACCESS_CLOSED));
       } else {
-        movie.remove()
+        Movie.findByIdAndDelete(req.params.movieId)
           .then(() => res.send(movie))
           .catch(next);
       }
