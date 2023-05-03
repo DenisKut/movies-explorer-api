@@ -19,7 +19,8 @@ const getUser = (req, res, next) => {
   User.findById(userId)
     .orFail(new NotFound(WRONG_USER_ID))
     .then((user) => {
-      res.status(200).send({ name: user.name, email: user.email });
+      // Вот тут надо добавить id
+      res.status(200).send({ id: user.id, name: user.name, email: user.email });
     })
     .catch((error) => {
       if (error.name === 'CastError') {
